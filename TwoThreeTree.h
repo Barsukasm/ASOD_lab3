@@ -1,5 +1,7 @@
 #include <iostream>
-
+#define EMPTY_TREE 0
+#define KEY_DOES_NOT_EXIST 1
+#define ITERATOR_END 2
 
 using namespace std;
 
@@ -8,12 +10,14 @@ using namespace std;
 template <class Data,class Key> class TwoThreeTree{
 
     class Element{
-        Key k;
+    public:
+        virtual ~Element(){}
     };
 
     class Leaf: public Element{
     public:
         Data t;
+        Key k;
         Leaf(Data data, Key key);
     };
 
@@ -64,6 +68,8 @@ private:
 
     //вспомогательные методы
     bool insert1(Element *t,Element *lt,Element *tup, Key &lup);
+    bool remove1(Element *t, Key k, Element *tlow1, bool one_son);
+    Data& read1(Element *t,Key key);
 };
 
 
@@ -82,11 +88,42 @@ template <class Data,class Key>
 void TwoThreeTree<Data,Key>::clear() {}
 
 template <class Data,class Key>
-Data& TwoThreeTree<Data,Key>::read(Key key) {}
+Data& TwoThreeTree<Data,Key>::read(Key key) {
+
+
+    if(root==NULL){
+        throw EMPTY_TREE;
+    }
+    if(root->son2==NULL){
+        Leaf *tempSon1 = dynamic_cast<Leaf*>(root->son1);
+        if(tempSon1->k==key){
+            return tempSon1->t;
+        }
+    }
+    return read1(root,key);
+}
+
+template <class Data,class Key>
+Data& TwoThreeTree<Data,Key>::read1(TwoThreeTree<Data, Key>::Element *t, Key key) {
+
+
+    if(t==NULL){
+        throw EMPTY_TREE;
+    }
+
+    if(typeid(t)== typeid(Leaf*)){
+        Leaf *tempT = dynamic_cast<Leaf*>(t);
+        if(tempT->k==key){
+            return tempT->t;
+        }
+    }
+    Node *tempT = dynamic_cast<Node*>(t);
+
+}
 
 template <class Data,class Key>
 bool TwoThreeTree<Data,Key>::insert(Data data, Key key) {
-    Element lt, *tbk;
+    Element *lt, *tbk;
     Key lbk;
 
     lt = new Leaf(data,key);
@@ -98,12 +135,13 @@ bool TwoThreeTree<Data,Key>::insert(Data data, Key key) {
     }
 
     if(root->son2==NULL ){
-        if(root->son1->k<key/*&& typeid(root->son1)== typeid(Leaf)*/){
+        Leaf *tempSon1 = dynamic_cast<Leaf*>(root->son1);
+        if(tempSon1->k<key){
             root->son2=lt;
             root->low2=key;
-        } else if(root->son1->k>key){
-            root->son2=root->son1;
-            root->low2=root->son1->k;
+        } else if(tempSon1->k>key){
+            root->son2=tempSon1;
+            root->low2=tempSon1->k;
             root->son1=lt;
             return true;
         } else{
@@ -117,7 +155,7 @@ bool TwoThreeTree<Data,Key>::insert(Data data, Key key) {
         return false;
     }
     if(tbk!=NULL){
-        Element temp = root;
+        Element *temp = root;
         root = new Node();
         root->son1=temp;
         root->son2=tbk;
@@ -133,70 +171,75 @@ bool TwoThreeTree<Data,Key>::insert1(TwoThreeTree<Data, Key>::Element *t,TwoThre
     Element *w, *tbk;
     Key lbk;
     int child=0;
-    if(typeid(t)== typeid(Leaf)){
-        if (t->k==lt->k) return false;
+
+    Leaf *tempLt= dynamic_cast<Leaf*>(lt);
+    if(typeid(t)== typeid(Leaf*)){
+        Leaf *tempT = dynamic_cast<Leaf*>(t);
+        if (tempT->k==tempLt->k) return false;
         else{
             tup=lt;
-            if(t->k<lt->k){
-                lup=lt->k;
+            if(tempT->k<tempLt->k){
+                lup=tempLt->k;
             } else{
-                lup=t->k;
-                Key temp = t->k;
-                t->k=lt->k;
-                lt->k=temp;
-                Data temp2 = t->t;
-                t->t = lt->t;
-                lt->t=temp2;
+                lup=tempT->k;
+                Key temp = tempT->k;
+                tempT->k=tempLt->k;
+                tempLt->k=temp;
+                Data temp2 = tempT->t;
+                tempT->t = tempLt->t;
+                tempLt->t=temp2;
             }
             return true;
         }
     }
-    if(lt->t<t->low2){
+    Node *tempT = dynamic_cast<Node*>(t);
+    if(tempLt->t<tempT->low2){
         child=1;
-        w=t->son1;
-    } else if (t->son3==NULL||(t->son3!=NULL&&lt->k<t->low3)){
+        w=tempT->son1;
+    } else if (tempT->son3==NULL||(tempT->son3!=NULL&&tempLt->k<tempT->low3)){
         child=2;
-        w=t->son2;
+        w=tempT->son2;
     } else{
         child=3;
-        w=t->son3;
+        w=tempT->son3;
     }
     bool inserted = insert1(w,lt,tbk,lbk);
     if(inserted){
         if(tbk!=NULL){
-            if(t->son3==NULL){
+            if(tempT->son3==NULL){
                 if(child==2){
-                    t->son3=tbk;
-                    t->low3=lbk;
+                    tempT->son3=tbk;
+                    tempT->low3=lbk;
                 } else{
-                    t->son3=t->son2;
-                    t->low3=t->low2;
-                    t->son2=tbk;
-                    t->low2=lbk;
+                    tempT->son3=tempT->son2;
+                    tempT->low3=tempT->low2;
+                    tempT->son2=tbk;
+                    tempT->low2=lbk;
             }
             }else{
                 tup=new Node();
+                Node *tempTup= dynamic_cast<Node*>(tup);
                 if(child==3){
-                    tup->son1=t->son3;
-                    tup->son2=tbk;
-                    tup->son3=NULL;
-                    tup->low2=lbk;
-                    t->son3=NULL;
-                    lup=t->low3;
+                    tempTup->son1=tempT->son3;
+                    tempTup->son2=tbk;
+                    tempTup->son3=NULL;
+                    tempTup->low2=lbk;
+                    tempT->son3=NULL;
+                    lup=tempT->low3;
                 }else{
-                    tup->son2=t->son3;
-                    tup->low2=t->low3;
-                    tup->son3=NULL;
+                    tempTup->son2=tempT->son3;
+                    tempTup->low2=tempT->low3;
+                    tempTup->son3=NULL;
                     if(child==2){
-                        tup->son1=tbk;
+                        tempTup->son1=tbk;
                         lup=lbk;
                     }
                     if(child==1){
-                        tup->son1=t->son2;
-                        t->son2=tbk;
-                        lup=t->low2;
-                        t->low2=lbk;
-                        t->son3=NULL;
+                        tempTup->son1=tempT->son2;
+                        tempT->son2=tbk;
+                        lup=tempTup->low2;
+                        tempT->low2=lbk;
+                        tempT->son3=NULL;
                     }
                 }
             }
@@ -207,7 +250,183 @@ bool TwoThreeTree<Data,Key>::insert1(TwoThreeTree<Data, Key>::Element *t,TwoThre
 
 
 template <class Data,class Key>
-bool TwoThreeTree<Data,Key>::remove(Key key) {}
+bool TwoThreeTree<Data,Key>::remove(Key key) {
+    Element *tmin;
+    bool one;
+
+    if(root==NULL){
+        return false;
+    }
+    if(root->son2==NULL){
+        Leaf *tempSon1= dynamic_cast<Leaf*>(root->son1);
+        if(tempSon1->k==key){
+            delete tempSon1;
+            delete root;
+            root=NULL;
+            return true;
+        } else{
+            return false;
+        }
+    }
+    bool deleted=remove1(root,key,tmin,one);
+    if(deleted){
+        if(one){
+            if(typeid(root->son1)!= typeid(Leaf*)){
+                Node *t= dynamic_cast<Node*>(root->son1);
+                delete root;
+                root=t;
+            }
+        }
+    }
+    return deleted;
+}
+
+template <class Data,class Key>
+bool TwoThreeTree<Data,Key>::remove1(TwoThreeTree<Data, Key>::Element *t, Key k,
+                                     TwoThreeTree<Data, Key>::Element *tlow1, bool one_son) {
+    int child=0;
+    Element *w, *tlow1_bk;
+    bool one_son_bk;
+
+    tlow1=NULL;
+    one_son=false;
+    Node *tempT= dynamic_cast<Node*>(t);
+    if(typeid(tempT->son1)== typeid(Leaf*)){
+        Leaf *tempSon1= dynamic_cast<Leaf*>(tempT->son1);
+        if(tempSon1->k==k){
+            delete tempSon1;
+            tempT->son1=tempT->son2;
+            tempT->son2=tempT->son3;
+            tempT->son3=NULL;
+            tempT->low2=tempT->low3;
+        } else {
+            Leaf *tempSon2= dynamic_cast<Leaf*>(tempT->son2);
+            if(tempSon2->k==k){
+                delete tempSon2;
+                tempT->son2=tempT->son3;
+                tempT->son3=NULL;
+                tempT->low2=tempT->low3;
+            } else{
+                if(tempT->son3!=NULL){
+                    Leaf *tempSon3= dynamic_cast<Leaf*>(tempT->son3);
+                    if(tempSon3->k==k){
+                       delete tempSon3;
+                       tempT->son3=NULL;
+                    }else return false;
+                } else return false;
+            }
+        }
+        tlow1=tempT->son1;
+        if(tempT->son2==NULL){
+            one_son=true;
+        }
+        return true;
+    }
+    if(k<tempT->low2){
+        child=1;
+        w=tempT->son1;
+    } else if(tempT->son3==NULL||k<tempT->low3){
+        child=2;
+        w=tempT->son2;
+    } else{
+        child=3;
+        w=tempT->son3;
+    }
+    if (!remove1(w,k,tlow1_bk,one_son_bk)){
+        return false;
+    }
+    tlow1=tlow1_bk;
+    if(tlow1_bk!=NULL){
+        if(child==2){
+            tempT->low2= dynamic_cast<Leaf*>(tlow1_bk)->k;
+            tlow1=NULL;
+        }
+        if(child==3){
+            tempT->low3= dynamic_cast<Leaf*>(tlow1_bk)->k;
+            tlow1=NULL;
+        }
+    }
+    if(!one_son_bk){
+        return true;
+    }
+    if(child==1){
+        Node *y= dynamic_cast<Node*>(tempT->son2);
+        Node *tempW= dynamic_cast<Node*>(w);
+        if(y->son3!=NULL){
+            tempW->son2=y->son1;
+            tempW->low2=tempT->low2;
+            tempT->low2=y->low2;
+            y->son1=y->son2;
+            y->son2=y->son3;
+            y->low2=y->low3;
+            y->son3=NULL;
+        } else{
+            y->son3=y->son2;
+            y->low3=y->low2;
+            y->son2=y->son1;
+            y->low2=tempT->low2;
+            y->son1=tempW->son1;
+            delete w;
+            tempT->son1=tempT->son2;
+            tempT->son2=tempT->son3;
+            tempT->low2=tempT->low3;
+            tempT->son3=NULL;
+            if(tempT->son2==NULL){
+                one_son=true;
+            }
+        }
+        return true;
+    }
+    if(child==2){
+        Node *y= dynamic_cast<Node*>(tempT->son1);
+        Node *tempW= dynamic_cast<Node*>(w);
+        if(y->son3!=NULL){
+            tempW->son2=tempW->son1;
+            tempW->low2=tempT->low2;
+            tempW->son1=y->son3;
+            y->son3=NULL;
+            tempT->low2=y->low3;
+            return true;
+        } else{
+            Node *z= dynamic_cast<Node*>(tempT->son3);
+            if(z!=NULL&&z->son3!=NULL){
+                tempW->son2=z->son1;
+                tempW->low2=tempT->low3;
+                tempT->low3=z->low2;
+                z->son1=z->son2;
+                z->son2=z->son3;
+                z->low2=z->low3;
+                z->son3=NULL;
+                return true;
+            }
+        }
+        y->son3=tempW->son1;
+        y->low3=tempT->low2;
+        delete w;
+        tempT->son2=tempT->son3;
+        tempT->low2=tempT->low3;
+        tempT->son3=NULL;
+        if(tempT->son2==NULL){
+            one_son=true;
+        }
+        return true;
+    }
+    Node *y= dynamic_cast<Node*>(tempT->son2);
+    Node *tempW= dynamic_cast<Node*>(w);
+    if(y->son3!=NULL){
+        tempW->son2=tempW->son1;
+        tempW->low2=tempT->low3;
+        tempW->son1=y->son3;
+        tempT->low2=y->low3;
+        y->son3=NULL;
+    } else{
+        y->son3=tempW->son1;
+        y->low3=tempT->low3;
+        tempT->son3=NULL;
+        delete w;
+    }
+    return true;
+}
 
 template <class Data,class Key>
 void TwoThreeTree<Data,Key>::print() {}
@@ -235,7 +454,7 @@ TwoThreeTree<Data,Key>::~TwoThreeTree() {clear();}
 template <class Data,class Key>
 TwoThreeTree<Data,Key>::Leaf::Leaf(Data data, Key key) {
     t=data;
-    Element::k=key;
+    k=key;
 }
 
 template <class Data,class Key>
