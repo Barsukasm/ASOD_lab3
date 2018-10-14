@@ -100,8 +100,8 @@ void TwoThreeTree<Data,Key>::clear1(TwoThreeTree<Data, Key>::Element *t) {
     if(t->type==0){
         delete t;
     } else{
-        clear1(((Node*)t)->son1);
-        clear1(((Node*)t)->son2);
+        if(((Node*)t)->son1!=NULL) clear1(((Node*)t)->son1);
+        if(((Node*)t)->son2!=NULL) clear1(((Node*)t)->son2);
         if(((Node*)t)->son3!=NULL) clear1(((Node*)t)->son3);
         delete t;
     }
