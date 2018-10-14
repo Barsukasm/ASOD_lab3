@@ -156,9 +156,14 @@ int main() {
                     break;
                 }
 
+                case -1:{
+                    showMenu();
+                    break;
+                }
+
             }
         }catch(int code) {
-            /*switch (code){
+            switch (code){
                 case EMPTY_TREE:cout<<"Empty tree"<<endl;
                     break;
                 case KEY_DOES_NOT_EXIST:cout<<"this key does not exist in tree"<<endl;
@@ -167,7 +172,7 @@ int main() {
                     break;
                 default:
                     break;
-            }*/
+            }
         }
     }
     return 0;
