@@ -33,7 +33,7 @@ int main() {
     TwoThreeTree<int,int> tree;
     TwoThreeTree<int ,int >::Iterator iter(tree);
 
-    srand((unsigned int)time(NULL));
+
 
     showMenu();
 
@@ -152,12 +152,27 @@ int main() {
                     test_rand(number);
                     cout<<"--------------------------------------------"<<endl;
                     cout<<"Sorted tree: "<<endl;
+                    srand((unsigned int)time(NULL));
                     test_sort(number);*/
                     break;
                 }
 
                 case -1:{
                     showMenu();
+                    break;
+                }
+                case -2:{//preset for remove test
+                    tree.clear();
+                    tree.insert(1,2);
+                    tree.insert(1,5);
+                    tree.insert(1,7);
+                    tree.insert(1,8);
+                    tree.insert(1,16);
+                    tree.insert(1,19);
+                    tree.insert(1,12);
+                    tree.insert(1,18);
+                    tree.insert(1,10);
+                    tree.print();
                     break;
                 }
 

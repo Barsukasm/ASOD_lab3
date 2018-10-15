@@ -2,6 +2,7 @@
 #define EMPTY_TREE 0
 #define KEY_DOES_NOT_EXIST 1
 #define ITERATOR_END 2
+#define ONE_ELEMENT_TREE 3
 
 using namespace std;
 
@@ -68,10 +69,14 @@ private:
 
     //вспомогательные методы
     bool insert1(Element *t,Leaf *&lt,Element *&tup, Key &lup);
-    bool remove1(Element *t, Key k, Element *tlow1, bool one_son);
+    bool remove1(Element *t, Key k, Element *&tlow1, bool &one_son);
     Data& read1(Element *t,Key key);
     void clear1(Element *t);
     void show(Element *t, int level);
+    Leaf* toFirst(Element *t);
+    Leaf* toLast(Element *t);
+    Element* successor(Element *t, Key key);
+    Element* predecessor(Element *t, Key key);
 };
 
 
@@ -221,7 +226,7 @@ bool TwoThreeTree<Data,Key>::insert1(TwoThreeTree<Data, Key>::Element *t,TwoThre
         }
     }
     //t - внутренний узел
-    if(((Leaf*)lt)->t<((Node*)t)->low2){
+    if(((Leaf*)lt)->k<((Node*)t)->low2){
         child=1;
         w=((Node*)t)->son1;
     } else if (((Node*)t)->son3==NULL||(((Node*)t)->son3!=NULL&&((Leaf*)lt)->k < ((Node*)t)->low3)){
@@ -266,9 +271,9 @@ bool TwoThreeTree<Data,Key>::insert1(TwoThreeTree<Data, Key>::Element *t,TwoThre
                         ((Node*)t)->son2=tbk;
                         lup=((Node*)t)->low2;
                         ((Node*)t)->low2=lbk;
-                        ((Node*)t)->son3=NULL;
                     }
                 }
+                ((Node*)t)->son3=NULL;
             }
         }
     }
@@ -297,21 +302,21 @@ bool TwoThreeTree<Data,Key>::remove(Key key) {
     }
     bool deleted=remove1(root,key,tmin,one);
     if(deleted){
-        length--;
         if(one){
-            if(root->son1->type==0){
+            if(root->son1->type==1){
                 Node *t= ((Node*)root->son1);
                 delete root;
                 root=t;
             }
         }
+        length--;
     }
     return deleted;
 }
 
 template <class Data,class Key>
 bool TwoThreeTree<Data,Key>::remove1(TwoThreeTree<Data, Key>::Element *t, Key k,
-                                     TwoThreeTree<Data, Key>::Element *tlow1, bool one_son) {
+                                     TwoThreeTree<Data, Key>::Element *&tlow1, bool &one_son) {
     int child=0;
     Element *w, *tlow1_bk;
     bool one_son_bk;
@@ -321,23 +326,21 @@ bool TwoThreeTree<Data,Key>::remove1(TwoThreeTree<Data, Key>::Element *t, Key k,
 
     if(((Node*)t)->son1->type==0){
         if(((Leaf*)((Node*)t)->son1)->k==k){
-            delete ((Leaf*)((Node*)t)->son1);
+            delete (((Node*)t)->son1);
             ((Node*)t)->son1=((Node*)t)->son2;
             ((Node*)t)->son2=((Node*)t)->son3;
             ((Node*)t)->son3=NULL;
             ((Node*)t)->low2=((Node*)t)->low3;
         } else {
             if(((Leaf*)((Node*)t)->son2)->k==k){
-                delete ((Leaf*)((Node*)t)->son2);
+                delete (((Node*)t)->son2);
                 ((Node*)t)->son2=((Node*)t)->son3;
                 ((Node*)t)->son3=NULL;
                 ((Node*)t)->low2=((Node*)t)->low3;
             } else{
-                if(((Node*)t)->son3!=NULL){
-                    if(((Leaf*)((Node*)t)->son3)->k==k){
-                       delete ((Leaf*)((Node*)t)->son3);
+                if(((Node*)t)->son3!=NULL&&((Leaf*)((Node*)t)->son3)->k==k){
+                       delete (((Node*)t)->son3);
                         ((Node*)t)->son3=NULL;
-                    }else return false;
                 } else return false;
             }
         }
@@ -423,6 +426,7 @@ bool TwoThreeTree<Data,Key>::remove1(TwoThreeTree<Data, Key>::Element *t, Key k,
                 return true;
             }
         }
+        //У t нет сыновей с 3 узлами
         y->son3=((Node*)w)->son1;
         y->low3=((Node*)t)->low2;
         delete w;
@@ -478,6 +482,24 @@ void TwoThreeTree<Data,Key>::show(TwoThreeTree<Data, Key>::Element *t, int level
 }
 
 template <class Data,class Key>
+typename TwoThreeTree<Data, Key>::Leaf * TwoThreeTree<Data,Key>::toLast(TwoThreeTree<Data, Key>::Element *t) {
+    if(t==NULL) throw ONE_ELEMENT_TREE;
+    if(t->type==0){
+        return ((Leaf*)t);
+    }
+    if(((Node*)t)->son3!=NULL) return toLast(((Node*)t)->son3);
+    if(((Node*)t)->son2!=NULL) return toLast(((Node*)t)->son2);
+}
+
+template <class Data, class Key>
+typename TwoThreeTree<Data, Key>::Leaf * TwoThreeTree<Data,Key>::toFirst(TwoThreeTree<Data, Key>::Element *t) {
+    if(t==NULL) throw ONE_ELEMENT_TREE;
+    if(t->type==0){
+        return ((Leaf*)t);
+    } else return toFirst(((Node*)t)->son1);
+}
+
+template <class Data,class Key>
 int TwoThreeTree<Data,Key>::getOperations() { return operations;}
 
 template <class Data,class Key>
@@ -513,24 +535,81 @@ TwoThreeTree<Data,Key>::Node::Node() {
 
 //Методы итератора
 template <class Data, class Key>
-TwoThreeTree<Data,Key>::Iterator::Iterator(TwoThreeTree<Data, Key> &tree) {}
+TwoThreeTree<Data,Key>::Iterator::Iterator(TwoThreeTree<Data, Key> &tree) {
+    this->tree=&tree;
+    cur=NULL;
+}
 
 template <class Data, class Key>
 bool TwoThreeTree<Data,Key>::Iterator::status() {
+    return (cur!=NULL);
+}
+
+template <class Data, class Key>
+bool TwoThreeTree<Data,Key>::Iterator::last() {
+    if(tree->root!=NULL){
+        cur=tree->toLast(tree->root);
+        return true;
+    } else return false;
+}
+
+template <class Data, class Key>
+bool TwoThreeTree<Data,Key>::Iterator::first() {
+    if(tree->root!=NULL){
+        cur=tree->toFirst(tree->root);
+        return true;
+    } else return false;
+}
+
+template <class Data, class Key>
+bool TwoThreeTree<Data,Key>::Iterator::operator--(int) {
+
+}
+
+template <class Data,class Key>
+typename TwoThreeTree<Data, Key>::Element * TwoThreeTree<Data,Key>::successor(TwoThreeTree<Data, Key>::Element *t, Key key) {
+    Element *w;
+
+    if(t==NULL){
+        throw EMPTY_TREE;
+    }
+
+    if(t->type==0){
+        if(((Leaf*)t)->k==key){
+            return t;
+        } else throw KEY_DOES_NOT_EXIST;
+    }
+    if(key<((Node*)t)->low2){
+        w=((Node*)t)->son1;
+    } else if(((Node*)t)->son3==NULL||(((Node*)t)->son3!=NULL&&key<((Node*)t)->low3)){
+        w=((Node*)t)->son2;
+    } else{
+        w=((Node*)t)->son3;
+    }
+    Element *el = successor(w,key);
+    if(((Leaf*)el)->k>key){
+        return el;//Успешно нашли следующий элемент
+    } else{//если функция успешно вернула элемент, и он не больше ключа, значит он равен ключу и мы находимся в узле который его содержит
+        if(((Node*)t)->son3!=NULL&&((Node*)t)->low3>key){
+            return ((Node*)t)->son3;
+        }
+    }
+}
+
+template <class Data,class Key>
+typename TwoThreeTree<Data, Key>::Element * TwoThreeTree<Data,Key>::predecessor(TwoThreeTree<Data, Key>::Element *t,
+                                                                                Key key) {
 
 }
 
 template <class Data, class Key>
-bool TwoThreeTree<Data,Key>::Iterator::last() {}
+bool TwoThreeTree<Data,Key>::Iterator::operator++(int) {
+
+}
 
 template <class Data, class Key>
-bool TwoThreeTree<Data,Key>::Iterator::first() {}
-
-template <class Data, class Key>
-bool TwoThreeTree<Data,Key>::Iterator::operator--(int) {}
-
-template <class Data, class Key>
-bool TwoThreeTree<Data,Key>::Iterator::operator++(int) {}
-
-template <class Data, class Key>
-Data& TwoThreeTree<Data,Key>::Iterator::operator*() {}
+Data& TwoThreeTree<Data,Key>::Iterator::operator*() {
+    if (status()){
+        return ((Leaf*)cur)->t;
+    } else throw ITERATOR_END;
+}
