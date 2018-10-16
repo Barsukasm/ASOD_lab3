@@ -5,7 +5,116 @@
 
 using namespace std;
 
+typedef unsigned long long INT_64;
 
+INT_64 lrand(){
+    return rand()<<16|rand();
+}
+
+void test_rand(int n){
+    TwoThreeTree<INT_64, int > tree;
+
+    INT_64* m=new INT_64[n];
+
+    for(int i=0; i<n; i++) {
+        m[i]=lrand();
+        tree.insert(1, m[i]);
+    }
+    int remErrOk=0, remErr=0, insErrOk=0, insErr=0;
+    double I=0;
+    double D=0;
+    double S=0;
+    for(int i=0;i<n/2;i++) {
+        if (i % 10 == 0) {
+            if(!tree.remove(lrand())) remErrOk++;
+            D += tree.getOperations();
+            if(!tree.insert(1, m[rand() % n])) insErrOk++;
+            I += tree.getOperations();
+            try {
+                tree.read(lrand());
+                S += tree.getOperations();
+            } catch (int code) { S += tree.getOperations(); }
+        } else {
+            int ind = rand() % n;
+            if(!tree.remove(m[ind])) remErr++;
+            D += tree.getOperations();
+            INT_64 key = lrand();
+            if(!tree.insert(1, key)) insErr++;
+            I += tree.getOperations();
+            m[ind] = key;
+            try {
+                tree.read(m[rand() % n]);
+                S += tree.getOperations();
+            } catch (int code) { S += tree.getOperations(); }
+
+        }
+
+    }
+    cout<<"Remove errors: "<<"fine - "<<remErrOk<<" not fine - "<<remErr<<endl;
+    cout<<"Insert errors: "<<"fine - "<<insErrOk<<" not fine - "<<insErr<<endl;
+    cout<<endl;
+    cout<<endl;
+    cout<<"items count:"<<tree.getSize()<<endl;
+    cout<<"1.39*log2(n)="<<1.39*(log(n)/log(2))<<endl;
+    cout<<"Count insert: " << I/(n/2) <<endl;
+    cout<<"Count delete: " << D/(n/2) <<endl;
+    cout<<"Count search: " << S/(n/2) <<endl;
+    delete[] m;
+
+}
+
+void test_sort(int n){
+    TwoThreeTree<INT_64,int > tree;
+
+    INT_64* m=new INT_64[n];
+
+    for(int i=0;i<n;i++){
+        m[i]=i*1000;
+        tree.insert(1, m[i]);
+    }
+
+    cout<<"items count:"<<tree.getSize()<<endl;
+    double I=0;
+    double D=0;
+    double S=0;
+
+    for(int i=0;i<n/2;i++) {
+        if (i % 10 == 0) {
+            int k = lrand() % (1000 * n);
+            k = k + !(k % 2);
+            tree.remove(k);
+            D += tree.getOperations();
+            tree.insert(1, m[rand() % n]);
+            I += tree.getOperations();
+            k = lrand() % (1000 * n);
+            k = k + !(k % 2);
+            try {
+                tree.read(k);
+                S += tree.getOperations();
+            } catch (int code) { S += tree.getOperations(); }
+        } else {
+            int ind = rand() % n;
+            tree.remove(m[ind]);
+            D += tree.getOperations();
+            int k = lrand() % (1000 * n);
+            k = k + k % 2;
+            tree.insert(1, k);
+            I += tree.getOperations();
+            m[ind] = k;
+            try {
+                tree.read(m[rand() % n]);
+                S += tree.getOperations();
+            } catch (int code) { S += tree.getOperations(); }
+
+        }
+    }
+    cout<<"items count:"<<tree.getSize()<<endl;
+    cout<<"n/2="<<n/2<<endl;
+    cout<<"Count insert: " << I/(n/2) <<endl;
+    cout<<"Count delete: " << D/(n/2) <<endl;
+    cout<<"Count search: " << S/(n/2) <<endl;
+    delete[] m;
+}
 
 
 void showMenu(){
@@ -32,7 +141,7 @@ void showMenu(){
 int main() {
     TwoThreeTree<int,int> tree;
     TwoThreeTree<int ,int >::Iterator iter(tree);
-
+    srand((unsigned int)time(NULL));
 
 
     showMenu();
@@ -144,7 +253,7 @@ int main() {
                 }
 
                 case 15:{
-                    /*int number;
+                    int number;
                     cout<<"Input tree length: ";
                     cin>>number;
                     cout<<endl;
@@ -152,8 +261,7 @@ int main() {
                     test_rand(number);
                     cout<<"--------------------------------------------"<<endl;
                     cout<<"Sorted tree: "<<endl;
-                    srand((unsigned int)time(NULL));
-                    test_sort(number);*/
+                    test_sort(number);
                     break;
                 }
 
