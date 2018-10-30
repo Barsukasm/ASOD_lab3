@@ -2,6 +2,7 @@
 #include <time.h>
 #include <math.h>
 #include "TwoThreeTree.h"
+#include "BST-tree.h"
 
 using namespace std;
 
@@ -11,8 +12,10 @@ INT_64 lrand(){
     return rand()<<16|rand();
 }
 
+//2-3 tests
+
 void test_rand(int n){
-    TwoThreeTree<INT_64, int > tree;
+    TwoThreeTree<int, INT_64 > tree;
 
     INT_64* m=new INT_64[n];
 
@@ -20,26 +23,27 @@ void test_rand(int n){
         m[i]=lrand();
         tree.insert(1, m[i]);
     }
-    int remErrOk=0, remErr=0, insErrOk=0, insErr=0;
+
     double I=0;
     double D=0;
     double S=0;
     for(int i=0;i<n/2;i++) {
         if (i % 10 == 0) {
-            if(!tree.remove(lrand())) remErrOk++;
+            tree.remove(lrand());
             D += tree.getOperations();
-            if(!tree.insert(1, m[rand() % n])) insErrOk++;
+            tree.insert(1, m[rand() % n]);
             I += tree.getOperations();
+
             try {
                 tree.read(lrand());
                 S += tree.getOperations();
             } catch (int code) { S += tree.getOperations(); }
         } else {
             int ind = rand() % n;
-            if(!tree.remove(m[ind])) remErr++;
+            tree.remove(m[ind]);
             D += tree.getOperations();
             INT_64 key = lrand();
-            if(!tree.insert(1, key)) insErr++;
+            tree.insert(1, key);
             I += tree.getOperations();
             m[ind] = key;
             try {
@@ -50,21 +54,17 @@ void test_rand(int n){
         }
 
     }
-    cout<<"Remove errors: "<<"fine - "<<remErrOk<<" not fine - "<<remErr<<endl;
-    cout<<"Insert errors: "<<"fine - "<<insErrOk<<" not fine - "<<insErr<<endl;
-    cout<<endl;
-    cout<<endl;
-    cout<<"items count:"<<tree.getSize()<<endl;
-    cout<<"1.39*log2(n)="<<1.39*(log(n)/log(2))<<endl;
-    cout<<"Count insert: " << I/(n/2) <<endl;
-    cout<<"Count delete: " << D/(n/2) <<endl;
-    cout<<"Count search: " << S/(n/2) <<endl;
-    delete[] m;
 
+    cout<<"items count:"<<tree.getSize()<<endl;
+    cout<<"log2(n)="<<(log(n)/log(2))<<endl;
+    cout<<"Count insert: "<< I/(n/2) <<endl;
+    cout<<"Count delete: " << D/(n/2) <<endl;
+    cout<<"Count search: "<< S/(n/2) <<endl;
+    delete[] m;
 }
 
 void test_sort(int n){
-    TwoThreeTree<INT_64,int > tree;
+    TwoThreeTree<int, INT_64 > tree;
 
     INT_64* m=new INT_64[n];
 
@@ -109,12 +109,119 @@ void test_sort(int n){
         }
     }
     cout<<"items count:"<<tree.getSize()<<endl;
+    cout<<"log2(n)="<<(log(n)/log(2))<<endl;
+    cout<<"Count insert: " << I/(n/2) <<endl;
+    cout<<"Count delete: " << D/(n/2) <<endl;
+    cout<<"Count search: " << S/(n/2) <<endl;
+    delete[] m;
+}
+
+//BST tests
+void test_rand_BST(int n){
+    BSTtree<int, INT_64 > tree;
+
+    INT_64* m=new INT_64[n];
+
+    for(int i=0; i<n; i++) {
+        m[i]=lrand();
+        tree.add(1, m[i]);
+    }
+
+
+    double I=0;
+    double D=0;
+    double S=0;
+
+    for(int i=0;i<n/2;i++) {
+        if (i % 10 == 0) {
+            tree.remove(lrand());
+            D += tree.getOperations();
+            tree.add(1, m[rand() % n]);
+            I += tree.getOperations();
+            try {
+                tree.read(lrand());
+                S += tree.getOperations();
+            } catch (int code) { S += tree.getOperations(); }
+        } else {
+            int ind = rand() % n;
+            tree.remove(m[ind]);
+            D += tree.getOperations();
+            INT_64 key = lrand();
+            tree.add(1, key);
+            I += tree.getOperations();
+            m[ind] = key;
+            try {
+                tree.read(m[rand() % n]);
+                S += tree.getOperations();
+            } catch (int code) { S += tree.getOperations(); }
+
+        }
+
+    }
+    cout<<"items count:"<<tree.getSize()<<endl;
+    cout<<"1.39*log2(n)="<<1.39*(log(n)/log(2))<<endl;
+    cout<<"Count insert: " << I/(n/2) <<endl;
+    cout<<"Count delete: " << D/(n/2) <<endl;
+    cout<<"Count search: " << S/(n/2) <<endl;
+    delete[] m;
+
+}
+
+void test_sort_BST(int n){
+    BSTtree<int, INT_64 > tree;
+
+    INT_64* m=new INT_64[n];
+
+    for(int i=0;i<n;i++){
+        m[i]=i*1000;
+        tree.add(1, m[i]);
+    }
+
+    cout<<"items count:"<<tree.getSize()<<endl;
+    double I=0;
+    double D=0;
+    double S=0;
+
+    for(int i=0;i<n/2;i++) {
+        if (i % 10 == 0) {
+            int k = lrand() % (1000 * n);
+            k = k + !(k % 2);
+            tree.remove(k);
+            D += tree.getOperations();
+            tree.add(1, m[rand() % n]);
+            I += tree.getOperations();
+            k = lrand() % (1000 * n);
+            k = k + !(k % 2);
+            try {
+                tree.read(k);
+                S += tree.getOperations();
+            } catch (int code) { S += tree.getOperations(); }
+        } else {
+            int ind = rand() % n;
+            tree.remove(m[ind]);
+            D += tree.getOperations();
+            int k = lrand() % (1000 * n);
+            k = k + k % 2;
+            tree.add(1, k);
+            I += tree.getOperations();
+            m[ind] = k;
+            try {
+                tree.read(m[rand() % n]);
+                S += tree.getOperations();
+            } catch (int code) { S += tree.getOperations(); }
+
+        }
+    }
+    cout<<"items count:"<<tree.getSize()<<endl;
     cout<<"n/2="<<n/2<<endl;
     cout<<"Count insert: " << I/(n/2) <<endl;
     cout<<"Count delete: " << D/(n/2) <<endl;
     cout<<"Count search: " << S/(n/2) <<endl;
     delete[] m;
 }
+
+
+
 
 
 void showMenu(){
@@ -257,6 +364,19 @@ int main() {
                     cout<<"Input tree length: ";
                     cin>>number;
                     cout<<endl;
+                    cout<<"--------------------------------------------"<<endl;
+                    cout<<"Tests for BST-tree"<<endl;
+                    cout<<"--------------------------------------------"<<endl;
+                    cout<<"Random tree: "<<endl;
+                    test_rand_BST(number);
+                    cout<<"--------------------------------------------"<<endl;
+                    cout<<"Sorted tree: "<<endl;
+                    test_sort_BST(number);
+                    cout<<endl;
+                    cout<<endl;
+                    cout<<"--------------------------------------------"<<endl;
+                    cout<<"Tests for 2-3 tree"<<endl;
+                    cout<<"--------------------------------------------"<<endl;
                     cout<<"Random tree: "<<endl;
                     test_rand(number);
                     cout<<"--------------------------------------------"<<endl;

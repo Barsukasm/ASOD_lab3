@@ -116,12 +116,11 @@ void TwoThreeTree<Data,Key>::clear1(TwoThreeTree<Data, Key>::Element *t) {
 template <class Data,class Key>
 Data& TwoThreeTree<Data,Key>::read(Key key) {
 
-    operations=0;
+    operations=1;
     if(root==NULL){
         throw EMPTY_TREE;
     }
     if(root->son2==NULL){
-        operations++;
         if(((Leaf*)root->son1)->k==key){
             return ((Leaf*)root->son1)->t;
         } else throw KEY_DOES_NOT_EXIST;
@@ -132,13 +131,14 @@ Data& TwoThreeTree<Data,Key>::read(Key key) {
 template <class Data,class Key>
 Data& TwoThreeTree<Data,Key>::read1(TwoThreeTree<Data, Key>::Element *t, Key key) {
     Element *w;
-    operations++;
     if(t==NULL){
         throw EMPTY_TREE;
     }
 
+
     if(t->type==0){
         if(((Leaf*)t)->k==key){
+            operations++;
             return ((Leaf*)t)->t;
         } else throw KEY_DOES_NOT_EXIST;
     }
@@ -149,6 +149,7 @@ Data& TwoThreeTree<Data,Key>::read1(TwoThreeTree<Data, Key>::Element *t, Key key
     } else{
         w=((Node*)t)->son3;
     }
+    operations++;
     return read1(w,key);
 
 }
@@ -300,6 +301,7 @@ bool TwoThreeTree<Data,Key>::remove(Key key) {
             delete root;
             root=NULL;
             length--;
+            operations++;
             return true;
         } else{
             return false;
@@ -314,6 +316,7 @@ bool TwoThreeTree<Data,Key>::remove(Key key) {
                 root=t;
             }
         }
+        operations++;
         length--;
     }
     return deleted;
