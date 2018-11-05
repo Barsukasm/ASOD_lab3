@@ -58,7 +58,6 @@ public://методы интерфейса
     int getOperations();//число просмотренных операций узлов дерева
 
     TwoThreeTree();//конструктор по умолчанию
-    TwoThreeTree(TwoThreeTree<Data,Key> &ttree);//конструктор копирования
     ~TwoThreeTree();//деструктор
 
 private:
@@ -293,6 +292,7 @@ bool TwoThreeTree<Data,Key>::remove(Key key) {
     bool one;
     operations=1;
     if(root==NULL){
+        length=0;
         return false;
     }
     if(root->son2==NULL){
@@ -300,7 +300,7 @@ bool TwoThreeTree<Data,Key>::remove(Key key) {
             delete ((Leaf*)root->son1);
             delete root;
             root=NULL;
-            length--;
+            length=0;
             operations++;
             return true;
         } else{
@@ -605,12 +605,6 @@ TwoThreeTree<Data,Key>::TwoThreeTree() {
     length=0;
 }
 
-template <class Data,class Key>
-TwoThreeTree<Data,Key>::TwoThreeTree(TwoThreeTree<Data, Key> &ttree) {
-    root=NULL;
-    length=0;
-    //copy(ttree.root);
-}
 
 template <class Data,class Key>
 TwoThreeTree<Data,Key>::~TwoThreeTree() {clear();}
