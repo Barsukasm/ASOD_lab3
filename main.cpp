@@ -105,7 +105,7 @@ void test_rand(int n){
 
     }
 
-    cout<<"BST items count:"<<tree_BST.getSize()<<"| 2-3 tree items count:"<<tree.getSize()<<endl;
+    cout<<"BST items count:"<<tree_BST.getSize()<<"| 2-3 tree items count:"<<tree.getSize()<<" |Re-counted size: "<<tree.reCount()<<endl;
     cout<<"BST theoretical: 1.39*log2(n)="<<1.39*(log(n)/log(2))<<"| 2-3 tree theoretical: log2(n)="<<(log(n)/log(2))<<endl;
     cout<<"BST count insert: "<< I_BST/(n/2)<<"| 2-3 tree count insert: "<< I/(n/2) <<endl;
     cout<<"BST count delete: " << D_BST/(n/2)<<"|2-3 tree count delete: " << D/(n/2) <<endl;
@@ -206,7 +206,7 @@ void test_sort(int n){
 
         }
     }
-    cout<<"BST items count:"<<tree_BST.getSize()<<"| 2-3 tree items count:"<<tree.getSize()<<endl;
+    cout<<"BST items count:"<<tree_BST.getSize()<<"| 2-3 tree items count:"<<tree.getSize()<<" |Re-counted size: "<<tree.reCount()<<endl;
     cout<<"BST theoretical: n/2="<<n/2<<"| 2-3 tree theoretical: log2(n)="<<(log(n)/log(2))<<endl;
     cout<<"BST count insert: "<< I_BST/(n/2)<<"| 2-3 tree count insert: "<< I/(n/2) <<endl;
     cout<<"BST count delete: " << D_BST/(n/2)<<"|2-3 tree count delete: " << D/(n/2) <<endl;

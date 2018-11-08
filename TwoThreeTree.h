@@ -60,11 +60,14 @@ public://методы интерфейса
     TwoThreeTree();//конструктор по умолчанию
     ~TwoThreeTree();//деструктор
 
+    int reCount();//пересчитать длину дерева
+
 private:
     Node *root;//указатель на корень
     int length;//длина дерева
 
     int operations;//число просмотров
+    int cnt;//для пересчета
 
     //вспомогательные методы
     bool insert1(Element *t,Leaf *&lt,Element *&tup, Key &lup);
@@ -76,7 +79,27 @@ private:
     Leaf* toLast(Element *t);
     Element* successor(Element *t, Key key);
     Element* predecessor(Element *t, Key key);
+    void count(Element *t);
 };
+
+//пересчет длинны дерева
+template <class Data,class Key>
+int TwoThreeTree<Data,Key>::reCount() {
+    cnt=0;
+    count(root);
+    return cnt;
+}
+
+template <class Data, class Key>
+void TwoThreeTree<Data,Key>::count(TwoThreeTree<Data, Key>::Element *t) {
+    if(t->type==1){
+        if(((Node*)t)->son1!=NULL) count(((Node*)t)->son1);
+        if(((Node*)t)->son2!=NULL) count(((Node*)t)->son2);
+        if(((Node*)t)->son3!=NULL) count(((Node*)t)->son3);
+    } else{
+        cnt++;
+    }
+}
 
 
 //Методы класса TwoThreeTree
@@ -620,7 +643,6 @@ TwoThreeTree<Data,Key>::Leaf::Leaf(Data data, Key key) {
 template <class Data,class Key>
 TwoThreeTree<Data,Key>::Node::Node() {
     son1=son2=son3=NULL;
-    low2=low3=0;
     Element::type=1;
 }
 
